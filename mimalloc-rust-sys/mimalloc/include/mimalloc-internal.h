@@ -370,11 +370,12 @@ static inline mi_heap_t** mi_tls_pthread_heap_slot(void) {
 extern pthread_key_t _mi_heap_default_key;
 #endif
 
+/* Jialun Zhang: added more heaps */
 // Default heap to allocate from (if not using TLS- or pthread slots).
 // Do not use this directly but use through `mi_heap_get_default()` (or the unchecked `mi_get_default_heap`).
 // This thread local variable is only used when neither MI_TLS_SLOT, MI_TLS_PTHREAD, or MI_TLS_PTHREAD_SLOT_OFS are defined.
 // However, on the Apple M1 we do use the address of this variable as the unique thread-id (issue #356).
-extern mi_decl_thread mi_heap_t* _mi_heap_default;  // default heap to allocate from
+extern mi_decl_thread mi_heap_t* _mi_heap_default[MAX_SANDBOX_NUM];  // default heap to allocate from
 
 static inline mi_heap_t* mi_get_default_heap(void) {
 #if defined(MI_TLS_SLOT)
@@ -396,7 +397,8 @@ static inline mi_heap_t* mi_get_default_heap(void) {
   #if defined(MI_TLS_RECURSE_GUARD)
   if (mi_unlikely(!_mi_process_is_initialized)) return _mi_heap_main_get();
   #endif
-  return _mi_heap_default;
+  /* Jialun Zhang: Add cur_pkey sub */
+  return _mi_heap_default[cur_pkey];
 #endif
 }
 

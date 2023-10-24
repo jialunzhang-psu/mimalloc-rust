@@ -159,10 +159,27 @@ impl GlobalMiMalloc {
         unsafe { mi_option_set_enabled_default(option) }
     }
 }
+
+extern "C" {
+    fn dprintf(fd: i32, s: *const u8, ...);
+}
+
+macro_rules! dbg_printf {
+    ($s:expr) => {
+        unsafe {
+            // dprintf(2, "alloc %ld\n".as_ptr(), $s as u64);
+            dprintf(1, "alloc\n".as_ptr());
+        }
+    };
+}
+
 unsafe impl GlobalAlloc for GlobalMiMalloc {
     #[inline]
     unsafe fn alloc(&self, layout: Layout) -> *mut u8 {
-        mi_malloc_aligned(layout.size(), layout.align()) as *mut u8
+        let ret = mi_malloc_aligned(layout.size(), layout.align()) as *mut u8;
+
+        // dbg_printf!(ret);
+        ret
     }
 
     #[inline]

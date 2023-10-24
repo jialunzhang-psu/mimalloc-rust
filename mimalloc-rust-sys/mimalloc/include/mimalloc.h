@@ -5,8 +5,13 @@ terms of the MIT license. A copy of the license can be found in the file
 "LICENSE" at the root of this distribution.
 -----------------------------------------------------------------------------*/
 #pragma once
+
 #ifndef MIMALLOC_H
 #define MIMALLOC_H
+
+/* Added by Jialun Zhang for MPK support */
+#define MAX_SANDBOX_NUM 16
+__thread unsigned long cur_pkey;
 
 #define MI_MALLOC_VERSION 179   // major + 2 digits minor
 

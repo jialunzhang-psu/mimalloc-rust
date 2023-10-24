@@ -4,6 +4,9 @@ This is free software; you can redistribute it and/or modify it under the
 terms of the MIT license. A copy of the license can be found in the file
 "LICENSE" at the root of this distribution.
 -----------------------------------------------------------------------------*/
+/* Added by Jialun Zhang for MPK support */
+#define _GNU_SOURCE             /* See feature_test_macros(7) */
+
 #ifndef _DEFAULT_SOURCE
 #define _DEFAULT_SOURCE   // ensure mmap flags are defined
 #endif
@@ -561,6 +564,10 @@ static void* mi_unix_mmapx(void* addr, size_t size, size_t try_alignment, int pr
     if (((size_t)1 << n) == try_alignment && n >= 12 && n <= 30) {  // alignment is a power of 2 and 4096 <= alignment <= 1GiB
       flags |= MAP_ALIGNED(n);
       void* p = mmap(addr, size, protect_flags, flags | MAP_ALIGNED(n), fd, 0);
+
+       /* Jialun Zhang: added for MPK support */
+      pkey_mprotect(p, size, protect_flags, cur_pkey);
+
       if (p!=MAP_FAILED) return p;
       // fall back to regular mmap
     }
@@ -568,6 +575,10 @@ static void* mi_unix_mmapx(void* addr, size_t size, size_t try_alignment, int pr
   #elif defined(MAP_ALIGN)  // Solaris
   if (addr == NULL && try_alignment > 1 && (try_alignment % _mi_os_page_size()) == 0) {
     void* p = mmap((void*)try_alignment, size, protect_flags, flags | MAP_ALIGN, fd, 0);  // addr parameter is the required alignment
+
+    /* Jialun Zhang: added for MPK support */
+    pkey_mprotect(p, size, protect_flags, cur_pkey);
+
     if (p!=MAP_FAILED) return p;
     // fall back to regular mmap
   }
@@ -578,6 +589,10 @@ static void* mi_unix_mmapx(void* addr, size_t size, size_t try_alignment, int pr
     void* hint = mi_os_get_aligned_hint(try_alignment, size);
     if (hint != NULL) {
       void* p = mmap(hint, size, protect_flags, flags, fd, 0);
+
+     /* Jialun Zhang: added for MPK support */
+     pkey_mprotect(p, size, protect_flags, cur_pkey);
+
       if (p!=MAP_FAILED) return p;
       // fall back to regular mmap
     }
@@ -585,6 +600,11 @@ static void* mi_unix_mmapx(void* addr, size_t size, size_t try_alignment, int pr
   #endif
   // regular mmap
   void* p = mmap(addr, size, protect_flags, flags, fd, 0);
+
+  /* Jialun Zhang: added for MPK support */
+  pkey_mprotect(p, size, protect_flags, cur_pkey);
+  printf("pkey_mprotect %p with pkey %d\n", p, cur_pkey);
+
   if (p!=MAP_FAILED) return p;
   // failed to allocate
   return NULL;

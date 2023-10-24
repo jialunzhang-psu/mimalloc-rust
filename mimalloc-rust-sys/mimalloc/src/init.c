@@ -103,8 +103,26 @@ mi_decl_cache_align const mi_heap_t _mi_heap_empty = {
 };
 
 
+/* Jialun Zhang: augmented the heap numbers */
 // the thread-local default heap for allocation
-mi_decl_thread mi_heap_t* _mi_heap_default = (mi_heap_t*)&_mi_heap_empty;
+mi_decl_thread mi_heap_t* _mi_heap_default[MAX_SANDBOX_NUM] = {
+  (mi_heap_t*)&_mi_heap_empty,
+  (mi_heap_t*)&_mi_heap_empty,
+  (mi_heap_t*)&_mi_heap_empty,
+  (mi_heap_t*)&_mi_heap_empty,
+  (mi_heap_t*)&_mi_heap_empty,
+  (mi_heap_t*)&_mi_heap_empty,
+  (mi_heap_t*)&_mi_heap_empty,
+  (mi_heap_t*)&_mi_heap_empty,
+  (mi_heap_t*)&_mi_heap_empty,
+  (mi_heap_t*)&_mi_heap_empty,
+  (mi_heap_t*)&_mi_heap_empty,
+  (mi_heap_t*)&_mi_heap_empty,
+  (mi_heap_t*)&_mi_heap_empty,
+  (mi_heap_t*)&_mi_heap_empty,
+  (mi_heap_t*)&_mi_heap_empty,
+  (mi_heap_t*)&_mi_heap_empty,
+};
 
 extern mi_heap_t _mi_heap_main;
 
@@ -436,7 +454,7 @@ void _mi_heap_set_default_direct(mi_heap_t* heap)  {
   #elif defined(MI_TLS_PTHREAD)
   // we use _mi_heap_default_key
   #else
-  _mi_heap_default = heap;
+  _mi_heap_default[cur_pkey] = heap;
   #endif
 
   // ensure the default heap is passed to `_mi_thread_done`
