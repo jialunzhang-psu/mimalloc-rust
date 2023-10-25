@@ -104,6 +104,7 @@ mi_decl_cache_align const mi_heap_t _mi_heap_empty = {
 
 
 /* Jialun Zhang: augmented the heap numbers */
+__thread unsigned long cur_pkey;
 // the thread-local default heap for allocation
 mi_decl_thread mi_heap_t* _mi_heap_default[MAX_SANDBOX_NUM] = {
   (mi_heap_t*)&_mi_heap_empty,
@@ -123,6 +124,7 @@ mi_decl_thread mi_heap_t* _mi_heap_default[MAX_SANDBOX_NUM] = {
   (mi_heap_t*)&_mi_heap_empty,
   (mi_heap_t*)&_mi_heap_empty,
 };
+
 
 extern mi_heap_t _mi_heap_main;
 
