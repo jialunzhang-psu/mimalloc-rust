@@ -159,10 +159,15 @@ mi_decl_nodiscard mi_decl_restrict void* mi_heap_malloc_aligned(mi_heap_t* heap,
   #endif
   {
     // fast path for common alignment and size
-    return mi_heap_malloc_small(heap, size);
+    void *p = mi_heap_malloc_small(heap, size);
+    printf("fast path on %p\n", p);
+    return p;
   }
-  else {
-    return mi_heap_malloc_aligned_at(heap, size, alignment, 0);
+  else
+  {
+    void *p = mi_heap_malloc_aligned_at(heap, size, alignment, 0);
+    printf("slow path on %p\n", p);
+    return p;
   }
 }
 

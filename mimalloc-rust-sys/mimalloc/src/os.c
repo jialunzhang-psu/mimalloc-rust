@@ -567,6 +567,7 @@ static void* mi_unix_mmapx(void* addr, size_t size, size_t try_alignment, int pr
 
        /* Jialun Zhang: added for MPK support */
       pkey_mprotect(p, size, protect_flags, cur_pkey);
+      printf("pkey_mprotect1 %p with pkey %d with size %lu\n", p, cur_pkey, size);
 
       if (p!=MAP_FAILED) return p;
       // fall back to regular mmap
@@ -578,6 +579,7 @@ static void* mi_unix_mmapx(void* addr, size_t size, size_t try_alignment, int pr
 
     /* Jialun Zhang: added for MPK support */
     pkey_mprotect(p, size, protect_flags, cur_pkey);
+    printf("pkey_mprotect2 %p with pkey %d with size %lu\n", p, cur_pkey, size);
 
     if (p!=MAP_FAILED) return p;
     // fall back to regular mmap
@@ -592,6 +594,7 @@ static void* mi_unix_mmapx(void* addr, size_t size, size_t try_alignment, int pr
 
      /* Jialun Zhang: added for MPK support */
      pkey_mprotect(p, size, protect_flags, cur_pkey);
+     printf("pkey_mprotect3 %p with pkey %d with size %lu\n", p, cur_pkey, size);
 
       if (p!=MAP_FAILED) return p;
       // fall back to regular mmap
@@ -603,7 +606,7 @@ static void* mi_unix_mmapx(void* addr, size_t size, size_t try_alignment, int pr
 
   /* Jialun Zhang: added for MPK support */
   pkey_mprotect(p, size, protect_flags, cur_pkey);
-  printf("pkey_mprotect %p with pkey %d\n", p, cur_pkey);
+  printf("pkey_mprotect4 %p with pkey %d with size %lu\n", p, cur_pkey, size);
 
   if (p!=MAP_FAILED) return p;
   // failed to allocate

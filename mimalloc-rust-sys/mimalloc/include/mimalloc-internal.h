@@ -399,6 +399,7 @@ static inline mi_heap_t* mi_get_default_heap(void) {
   if (mi_unlikely(!_mi_process_is_initialized)) return _mi_heap_main_get();
   #endif
   /* Jialun Zhang: Add cur_pkey sub */
+  printf("Get default heap %d\n", cur_pkey);
   return _mi_heap_default[cur_pkey];
 #endif
 }
