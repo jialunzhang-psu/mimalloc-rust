@@ -10,7 +10,24 @@ terms of the MIT license. A copy of the license can be found in the file
 #define MIMALLOC_H
 
 /* Added by Jialun Zhang for MPK support */
+// #define PAGODA_DEBUG
 #define MAX_SANDBOX_NUM 16
+#define DEFAULT_SANDBOX_PKEY 1
+#define INVALID_SANDBOX_PKEY 0
+/// @brief Write PKRU. Used by mpk.rs.
+/// @param pkru new PKRU
+static inline void
+wrpkru(unsigned int pkru)
+{
+    unsigned int eax = pkru;
+    unsigned int ecx = 0;
+    unsigned int edx = 0;
+
+    asm volatile(".byte 0x0f,0x01,0xef\n\t"
+                 : : "a"(eax), "c"(ecx), "d"(edx));
+}
+
+
 
 #define MI_MALLOC_VERSION 179   // major + 2 digits minor
 

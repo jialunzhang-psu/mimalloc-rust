@@ -885,9 +885,6 @@ void* _mi_malloc_generic(mi_heap_t* heap, size_t size, bool zero, size_t huge_al
 
   // find (or allocate) a page of the right size
   mi_page_t* page = mi_find_page(heap, size, huge_alignment);
-  if (cur_pkey == 1) {
-    printf("when cur_pkey == 1, mi_find_page: %p\n", page);
-  }
   if mi_unlikely(page == NULL) { // first time out of memory, try to collect and retry the allocation once more
     mi_heap_collect(heap, true /* force */);
     page = mi_find_page(heap, size, huge_alignment);

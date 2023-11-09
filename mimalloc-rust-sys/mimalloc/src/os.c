@@ -567,8 +567,9 @@ static void* mi_unix_mmapx(void* addr, size_t size, size_t try_alignment, int pr
 
        /* Jialun Zhang: added for MPK support */
       pkey_mprotect(p, size, protect_flags, cur_pkey);
-      printf("pkey_mprotect1 %p with pkey %d with size %lu\n", p, cur_pkey, size);
-
+      #if defined(PAGODA_DEBUG)
+      printf("pkey_mprotect1 %p with pkey %d with size %lu and prot %d\n", p, cur_pkey, size, protect_flags);
+      #endif
       if (p!=MAP_FAILED) return p;
       // fall back to regular mmap
     }
@@ -579,7 +580,9 @@ static void* mi_unix_mmapx(void* addr, size_t size, size_t try_alignment, int pr
 
     /* Jialun Zhang: added for MPK support */
     pkey_mprotect(p, size, protect_flags, cur_pkey);
-    printf("pkey_mprotect2 %p with pkey %d with size %lu\n", p, cur_pkey, size);
+    #if defined(PAGODA_DEBUG)
+    printf("pkey_mprotect2 %p with pkey %d with size %lu and prot %d\n", p, cur_pkey, size, protect_flags);
+    #endif
 
     if (p!=MAP_FAILED) return p;
     // fall back to regular mmap
@@ -592,9 +595,11 @@ static void* mi_unix_mmapx(void* addr, size_t size, size_t try_alignment, int pr
     if (hint != NULL) {
       void* p = mmap(hint, size, protect_flags, flags, fd, 0);
 
-     /* Jialun Zhang: added for MPK support */
-     pkey_mprotect(p, size, protect_flags, cur_pkey);
-     printf("pkey_mprotect3 %p with pkey %d with size %lu\n", p, cur_pkey, size);
+      /* Jialun Zhang: added for MPK support */
+      pkey_mprotect(p, size, protect_flags, cur_pkey);
+      #if defined(PAGODA_DEBUG)
+      printf("pkey_mprotect3 %p with pkey %d with size %lu and prot %d\n", p, cur_pkey, size, protect_flags);
+      #endif
 
       if (p!=MAP_FAILED) return p;
       // fall back to regular mmap
@@ -606,7 +611,9 @@ static void* mi_unix_mmapx(void* addr, size_t size, size_t try_alignment, int pr
 
   /* Jialun Zhang: added for MPK support */
   pkey_mprotect(p, size, protect_flags, cur_pkey);
-  printf("pkey_mprotect4 %p with pkey %d with size %lu\n", p, cur_pkey, size);
+  #if defined(PAGODA_DEBUG)
+  printf("pkey_mprotect4 %p with pkey %d with size %lu and prot %d\n", p, cur_pkey, size, protect_flags);
+  #endif
 
   if (p!=MAP_FAILED) return p;
   // failed to allocate

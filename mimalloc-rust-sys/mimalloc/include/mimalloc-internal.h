@@ -399,7 +399,10 @@ static inline mi_heap_t* mi_get_default_heap(void) {
   if (mi_unlikely(!_mi_process_is_initialized)) return _mi_heap_main_get();
   #endif
   /* Jialun Zhang: Add cur_pkey sub */
+  #if defined(PAGODA_DEBUG)
   printf("Get default heap %d\n", cur_pkey);
+  #endif
+  mi_assert_internal(cur_pkey != INVALID_SANDBOX_PKEY);
   return _mi_heap_default[cur_pkey];
 #endif
 }

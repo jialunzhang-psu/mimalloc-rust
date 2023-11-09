@@ -10,6 +10,10 @@ terms of the MIT license. A copy of the license can be found in the file
 #include <string.h>  // memcpy, memset
 #include <stdlib.h>  // atexit
 
+/* Jialun Zhang: MPK support */
+#define _GNU_SOURCE             /* See feature_test_macros(7) */
+#include <sys/mman.h>
+
 // Empty page used to initialize the small free pages array
 const mi_page_t _mi_page_empty = {
   0, false, false, false, false,
@@ -104,10 +108,11 @@ mi_decl_cache_align const mi_heap_t _mi_heap_empty = {
 
 
 /* Jialun Zhang: augmented the heap numbers */
-__thread unsigned long cur_pkey;
+__thread unsigned long cur_pkey = 1;
+cur_pkey_initialized = false;
 // the thread-local default heap for allocation
 mi_decl_thread mi_heap_t* _mi_heap_default[MAX_SANDBOX_NUM] = {
-  (mi_heap_t*)&_mi_heap_empty,
+  (mi_heap_t*)&_mi_heap_empty, // this should not be used
   (mi_heap_t*)&_mi_heap_empty,
   (mi_heap_t*)&_mi_heap_empty,
   (mi_heap_t*)&_mi_heap_empty,
@@ -255,7 +260,7 @@ static void mi_thread_data_collect(void) {
 // Initialize the thread local default heap, called from `mi_thread_init`
 static bool _mi_heap_init(void) {
   if (mi_heap_is_initialized(mi_get_default_heap())) return true;
-  if (_mi_is_main_thread() && cur_pkey == 0) {
+  if (_mi_is_main_thread() && cur_pkey == DEFAULT_SANDBOX_PKEY) {
     // mi_assert_internal(_mi_heap_main.thread_id != 0);  // can happen on freeBSD where alloc is called before any initialization
     // the main heap is statically allocated
     mi_heap_main_init();
@@ -437,6 +442,13 @@ void mi_thread_done(void) mi_attr_noexcept {
 }
 
 static void _mi_thread_done(mi_heap_t* heap) {
+  /* Jialun Zhang: disable all MPK protection, so that we can free the heap
+   * that's in other sandboxes (not in cur_pkey). Note that we don't need to
+   * enable it again, because the thread is going to be destroyed anyway, and
+   * the mimalloc heaps (_mi_heap_default) and cur_pkey are thread-local.
+   */
+  wrpkru(0);  
+
   mi_atomic_decrement_relaxed(&thread_count);
   _mi_stat_decrease(&_mi_stats_main.threads, 1);
 
@@ -525,6 +537,16 @@ static void mi_allocator_done(void) {
 
 // Called once by the process loader
 static void mi_process_load(void) {
+  /* Jialun Zhang: get the default pkey allocated */
+  if (!cur_pkey_initialized) {
+    // TODO: make sure this should only be executed once
+    cur_pkey = pkey_alloc(0, 0);
+    if (cur_pkey == -1) {
+      _mi_error_message(ENOSPC, "unable to allocate the default pkey (i.e. 1)\n");
+    }
+    mi_assert_internal(cur_pkey == DEFAULT_SANDBOX_PKEY);
+    cur_pkey_initialized = true;
+  }
   mi_heap_main_init();
   #if defined(MI_TLS_RECURSE_GUARD)
   volatile mi_heap_t* dummy = _mi_heap_default; // access TLS to allocate it before setting tls_initialized to true;

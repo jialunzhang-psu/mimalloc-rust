@@ -94,7 +94,8 @@ typedef struct mem_region_s {
   mi_bitmap_field_t         commit;      // track if committed per block
   mi_bitmap_field_t         reset;       // track if reset per block
   _Atomic(size_t)           arena_memid; // if allocated from a (huge page) arena
-  _Atomic(size_t)           padding;     // round to 8 fields (needs to be atomic for msvc, see issue #508)
+  _Atomic(size_t)           pkey;        // the protection key
+  // _Atomic(size_t)           padding;     // round to 8 fields (needs to be atomic for msvc, see issue #508)
 } mem_region_t;
 
 // The region map
@@ -197,6 +198,7 @@ static bool mi_region_try_alloc_os(size_t blocks, bool commit, bool allow_large,
   // allocated, initialize and claim the initial blocks
   mem_region_t* r = &regions[idx];
   r->arena_memid  = arena_memid;
+  r->pkey         = cur_pkey;
   mi_atomic_store_release(&r->in_use, (size_t)0);
   mi_atomic_store_release(&r->dirty, (is_zero ? 0 : MI_BITMAP_FIELD_FULL));
   mi_atomic_store_release(&r->commit, (region_commit ? MI_BITMAP_FIELD_FULL : 0));
@@ -226,6 +228,8 @@ static bool mi_region_is_suitable(const mem_region_t* region, int numa_node, boo
   mi_region_info_t info;
   info.value = mi_atomic_load_relaxed(&((mem_region_t*)region)->info);
   if (info.value==0) return false;
+
+  if (region->pkey != cur_pkey) return false; // not accessible
 
   // numa correct
   if (numa_node >= 0) {  // use negative numa node to always succeed
@@ -269,7 +273,7 @@ static void* mi_region_try_alloc(size_t blocks, bool* commit, bool* large, bool*
   mi_bitmap_index_t bit_idx;
   const int numa_node = (_mi_os_numa_node_count() <= 1 ? -1 : _mi_os_numa_node(tld));
   // try to claim in existing regions
-  if (!mi_region_try_claim(numa_node, blocks, *large, &region, &bit_idx, tld)) {
+  if (!mi_region_try_claim(numa_node, blocks, *large, &region, &bit_idx, tld)) { // Jialun Zhang: Remove this to avoid reclaiming memory 
     // otherwise try to allocate a fresh region and claim in there
     if (!mi_region_try_alloc_os(blocks, *commit, *large, &region, &bit_idx, tld)) {
       // out of regions or memory

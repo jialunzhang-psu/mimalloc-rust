@@ -160,13 +160,17 @@ mi_decl_nodiscard mi_decl_restrict void* mi_heap_malloc_aligned(mi_heap_t* heap,
   {
     // fast path for common alignment and size
     void *p = mi_heap_malloc_small(heap, size);
-    printf("fast path on %p\n", p);
+    #if defined(PAGODA_DEBUG)
+    printf("fast path result at %p\n", p);
+    #endif
     return p;
   }
   else
   {
     void *p = mi_heap_malloc_aligned_at(heap, size, alignment, 0);
-    printf("slow path on %p\n", p);
+    #if defined(PAGODA_DEBUG)
+    printf("slow path result at %p\n", p);
+    #endif
     return p;
   }
 }
@@ -198,7 +202,11 @@ mi_decl_nodiscard mi_decl_restrict void* mi_malloc_aligned_at(size_t size, size_
 }
 
 mi_decl_nodiscard mi_decl_restrict void* mi_malloc_aligned(size_t size, size_t alignment) mi_attr_noexcept {
-  return mi_heap_malloc_aligned(mi_get_default_heap(), size, alignment);
+  void* p = mi_heap_malloc_aligned(mi_get_default_heap(), size, alignment);
+  #if defined(PAGODA_DEBUG)
+  printf("mi_malloc_aligned results: %p\n", p);
+  #endif
+  return p;
 }
 
 mi_decl_nodiscard mi_decl_restrict void* mi_zalloc_aligned_at(size_t size, size_t alignment, size_t offset) mi_attr_noexcept {
